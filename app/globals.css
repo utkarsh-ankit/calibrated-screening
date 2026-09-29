@@ -1,0 +1,65 @@
+:root {
+  --bg: #f7f7f5;
+  --panel: #ffffff;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: #e3e3df;
+  --advance: #1f7a4d;
+  --review: #b26b00;
+  --reject: #b3261e;
+  --accent: #2f4bd8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --panel: #1c1c1c;
+    --text: #ececec;
+    --muted: #9a9a9a;
+    --border: #2e2e2e;
+    --advance: #4cc38a;
+    --review: #f0a830;
+    --reject: #ff6b61;
+    --accent: #8ea2ff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 15px; margin: 0 0 12px; }
+.muted { color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+button {
+  background: var(--accent); color: white; border: 0; border-radius: 8px;
+  padding: 9px 16px; font-weight: 600; cursor: pointer; font-size: 14px;
+}
+button:disabled { opacity: 0.5; cursor: default; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+textarea, input[type="text"] {
+  width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px; font: inherit;
+}
+.req { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.req input[type="text"] { flex: 1; }
+.lanes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+@media (max-width: 800px) { .lanes { grid-template-columns: 1fr; } }
+.lane h2 { display: flex; justify-content: space-between; }
+.lane.advance h2 { color: var(--advance); }
+.lane.human_review h2 { color: var(--review); }
+.lane.reject h2 { color: var(--reject); }
+.card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
+.card:hover { border-color: var(--accent); }
+.bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.bar > span { display: block; height: 100%; }
+.pill { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); }
+.met { color: var(--advance); }
+.unclear { color: var(--review); }
+.missing { color: var(--reject); }
+.stats { display: flex; gap: 20px; font-size: 13px; }
+ul { margin: 6px 0; padding-left: 18px; }
