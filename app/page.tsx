@@ -120,7 +120,7 @@ export default function Home() {
         <div className="row" style={{ marginTop: 16 }}>
           <span className="muted">Run Jev:</span>
           <button className={mode === "app" ? "" : "ghost"} onClick={() => setMode("app")}>
-            In this app
+            Keyword baseline (old-school ATS)
           </button>
           <button className={mode === "promptql" ? "" : "ghost"} onClick={() => setMode("promptql")}>
             Through PromptQL
@@ -130,7 +130,7 @@ export default function Home() {
         {mode === "app" ? (
           <div style={{ marginTop: 12 }}>
             <p className="muted" style={{ fontSize: 13 }}>
-              Uses <code>TYPESAFE_API_KEY</code> if set, otherwise mock answers.
+              No AI: scores each requirement by matching its words in the resume, like a traditional ATS keyword filter. Compare with Jev under Through PromptQL.
             </p>
             <button onClick={runInApp} disabled={loading}>
               {loading ? "Checking…" : `Check ${sampleCandidates.length} resumes`}
@@ -184,7 +184,7 @@ export default function Home() {
 
         {run && (
           <div className="stats muted" style={{ marginTop: 12 }}>
-            <span>Source: {run.source === "mock" ? "MOCK (fake answers)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
+            <span>Source: {run.source === "mock" ? "Keyword baseline (no AI)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
             {run.results[0] && <span>{run.results[0].model}</span>}
             {run.totalMs !== null && <span>{run.totalMs} ms total</span>}
             <span>{tokens.toLocaleString()} input tokens ≈ ${((tokens / 1e6) * 0.042).toFixed(5)}</span>
