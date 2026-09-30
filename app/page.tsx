@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { sampleCandidates, sampleJob } from "@/data/sample";
+import Compare from "./compare";
 import { buildPromptQLPrompt, GITHUB_BOT_PROMPT, parsePromptQLResults } from "@/lib/promptql";
 import type { Job, Lane, ScreeningResult, Source } from "@/lib/types";
 
@@ -18,7 +19,7 @@ export default function Home() {
   const [run, setRun] = useState<Run | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const [mode, setMode] = useState<"app" | "promptql">("promptql");
+  const [mode, setMode] = useState<"compare" | "app" | "promptql">("compare");
   const [pasted, setPasted] = useState("");
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
@@ -46,7 +47,7 @@ export default function Home() {
     const res = await fetch("/api/screen", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job, candidates: sampleCandidates }),
+      body: JSON.stringify({ job, candidates: sampleCandidates, ats: true }),
     });
     setRun(await res.json());
     setLoading(false);
@@ -135,7 +136,9 @@ export default function Home() {
         ))}
 
         <div className="row" style={{ marginTop: 16 }}>
-          <span className="muted">Run Jev:</span>
+          <button className={mode === "compare" ? "" : "ghost"} onClick={() => setMode("compare")}>
+            Compare all 3
+          </button>
           <button className={mode === "app" ? "" : "ghost"} onClick={() => setMode("app")}>
             Keyword baseline (old-school ATS)
           </button>
@@ -144,7 +147,13 @@ export default function Home() {
           </button>
         </div>
 
-        {mode === "app" ? (
+        {mode === "compare" ? (
+          <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>
+            The same evidence questions answered three ways: an ATS keyword filter (live), a free open-source LLM
+            running locally (saved run), and Jev through PromptQL (saved run). Change the must-haves above and every
+            column updates.
+          </p>
+        ) : mode === "app" ? (
           <div style={{ marginTop: 12 }}>
             <p className="muted" style={{ fontSize: 13 }}>
               No AI: scores each requirement by matching its words in the resume, like a traditional ATS keyword filter. Compare with Jev under Through PromptQL.
@@ -199,7 +208,7 @@ export default function Home() {
           </div>
         )}
 
-        {run && (
+        {run && mode !== "compare" && (
           <div className="stats muted" style={{ marginTop: 12 }}>
             <span>Source: {run.source === "mock" ? "Keyword baseline (no AI)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
             {run.results[0] && <span>{run.results[0].model}</span>}
@@ -207,14 +216,16 @@ export default function Home() {
             <span>{tokens.toLocaleString()} input tokens ≈ ${((tokens / 1e6) * 0.042).toFixed(5)}</span>
           </div>
         )}
-        {run?.errors.map((e) => (
+        {mode !== "compare" && run?.errors.map((e) => (
           <p key={e} className="not_found" style={{ fontSize: 13 }}>
             {e}
           </p>
         ))}
       </div>
 
-      {run && (
+      {mode === "compare" && <Compare job={job} />}
+
+      {run && mode !== "compare" && (
         <div className="lanes">
           {LANES.map(({ lane, label, hint }) => {
             const items = run.results

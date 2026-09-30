@@ -48,7 +48,8 @@ function overlap(question: string, text: string) {
   return words.filter((w) => t.includes(w.slice(0, 4))).length / words.length; // crude stem match
 }
 
-async function mockSystemOne(
+/** Keyword baseline (ATS-style word matching). No AI. Also used as the mock when no Jev key is set. */
+export async function mockSystemOne(
   state: Record<string, unknown>,
   questions: Record<string, JevQuestion>,
 ): Promise<JevResponse> {
@@ -90,6 +91,5 @@ async function mockSystemOne(
     }
   }
 
-  await new Promise((r) => setTimeout(r, 80 + hash(text) * 150)); // fake latency
   return { model: "mock-jev", answers, usage: { input_tokens: Math.round(text.length / 4), output_tokens: 0 } };
 }

@@ -58,6 +58,19 @@ The rules live in one small function: `assignLane` in [`lib/screening.ts`](lib/s
 Full steps and the prompt to give the bot: [`promptql/README.md`](promptql/README.md). If the bot can't write to GitHub,
 it replies with the JSON and you paste it into the app instead.
 
+## Comparison: ATS keywords vs open-source LLM vs Jev
+
+The page opens on **Compare all 3**: the same evidence questions answered by
+
+| Method | How | Where it runs |
+|---|---|---|
+| ATS keywords | Word matching, no AI | Live in the app |
+| Open-source LLM | Local Ollama model writes yes/no + a confidence number | Saved run (`promptql/llm-results.json`) |
+| Jev | Typed decision model returns a probability | Saved run via PromptQL (`promptql/results.json`) |
+
+To refresh the LLM baseline: install [Ollama](https://ollama.com), `ollama pull llama3.2:3b`, then
+`npm run llm:run` and push `promptql/llm-results.json`.
+
 ## Run it
 
 ```bash
