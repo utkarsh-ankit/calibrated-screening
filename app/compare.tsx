@@ -21,10 +21,31 @@ type Method = {
   time: string;
   cost: string;
   unusable: string;
+  tokens: string;
   note?: string;
 };
 
 type LlmMeta = { model: string; total_ms: number; calls: number; parse_failures: number; created_at: string };
+
+function sumTokens(text: string | null): { input: number; output: number } | null {
+  if (!text) return null;
+  try {
+    const raw = JSON.parse(text) as Record<string, { usage?: { input_tokens?: number; output_tokens?: number } }>;
+    let input = 0;
+    let output = 0;
+    for (const [k, v] of Object.entries(raw)) {
+      if (k.startsWith("_") || !v?.usage) continue;
+      input += v.usage.input_tokens ?? 0;
+      output += v.usage.output_tokens ?? 0;
+    }
+    return { input, output };
+  } catch {
+    return null;
+  }
+}
+
+const fmtTokens = (t: { input: number; output: number } | null) =>
+  t ? `${t.input.toLocaleString()} input · ${t.output.toLocaleString()} output` : "—";
 
 export default function Compare({ job }: { job: Job }) {
   const [atsRaw, setAtsRaw] = useState<{ results: ScreeningResult[]; totalMs: number } | null>(null);
@@ -74,6 +95,7 @@ export default function Compare({ job }: { job: Job }) {
         time: atsRaw ? `${atsRaw.totalMs} ms` : "…",
         cost: "$0",
         unusable: "0",
+        tokens: "0 (no model)",
       },
       {
         key: "llm",
@@ -83,6 +105,7 @@ export default function Compare({ job }: { job: Job }) {
         time: meta ? `${(meta.total_ms / 1000).toFixed(1)} s (${meta.calls} calls, laptop)` : "—",
         cost: "$0 (local)",
         unusable: meta ? `${meta.parse_failures} of ${meta.calls}` : "—",
+        tokens: fmtTokens(sumTokens(llmText)),
         note: llm ? undefined : "Not run yet: npm run llm:run",
       },
       {
@@ -93,6 +116,7 @@ export default function Compare({ job }: { job: Job }) {
         time: jev ? `${jev.length} calls (1 per resume), ~100 ms each per TypeSafe` : "—",
         cost: jev ? `$${(jevTokens * JEV_PRICE_PER_TOKEN).toFixed(5)}` : "—",
         unusable: jev ? "0 (typed output)" : "—",
+        tokens: fmtTokens(sumTokens(jevText)),
       },
     ];
   }, [atsRaw, llmText, jevText, job]);
@@ -114,6 +138,7 @@ export default function Compare({ job }: { job: Job }) {
             <div style={{ fontSize: 13 }}>
               <div>Time: {m.time}</div>
               <div>Cost: {m.cost}</div>
+              <div>Tokens: {m.tokens}</div>
               <div>Unusable answers: {m.unusable}</div>
               {m.note && <div className="unclear">{m.note}</div>}
             </div>
