@@ -92,8 +92,8 @@ export function interpret(
 
 /**
  * Where should a reviewer look first?
- *   1. Any must-have the model is UNSURE about  -> closer_look  (uncertainty is surfaced, not hidden)
- *   2. Any must-have with NO evidence found     -> gaps         (a human confirms; nobody is auto-rejected)
+ *   1. Any must-have with NO evidence found     -> gaps         (a human confirms; nobody is auto-rejected)
+ *   2. Else, any must-have the model is UNSURE -> closer_look  (uncertainty is surfaced, not hidden)
  *   3. Every must-have evidenced                -> strong
  */
 export function assignLane(reqs: RequirementResult[]): { lane: Lane; reasons: string[] } {
@@ -101,17 +101,21 @@ export function assignLane(reqs: RequirementResult[]): { lane: Lane; reasons: st
   const unclear = must.filter((r) => r.band === "unclear");
   const notFound = must.filter((r) => r.band === "not_found");
 
-  if (unclear.length) {
-    return {
-      lane: "closer_look",
-      reasons: unclear.map((r) => `Unclear evidence for must-have "${r.requirement.text}" (${pct(r.pEvidence)}).`),
-    };
-  }
+  const unclearReasons = unclear.map((r) => `Unclear evidence for must-have "${r.requirement.text}" (${pct(r.pEvidence)}).`);
+
+  // A clear gap outweighs uncertainty elsewhere: send to "gaps" first.
   if (notFound.length) {
     return {
       lane: "gaps",
-      reasons: notFound.map((r) => `No evidence found for must-have "${r.requirement.text}" (${pct(r.pEvidence)}).`),
+      reasons: [
+        ...notFound.map((r) => `No evidence found for must-have "${r.requirement.text}" (${pct(r.pEvidence)}).`),
+        ...unclearReasons,
+      ],
     };
+  }
+  // Nothing clearly missing, but the model is unsure about something: a human should look.
+  if (unclear.length) {
+    return { lane: "closer_look", reasons: unclearReasons };
   }
   return { lane: "strong", reasons: [`Evidence found for all ${must.length} must-haves.`] };
 }
