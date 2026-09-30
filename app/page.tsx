@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { sampleCandidates, sampleJob } from "@/data/sample";
 import Compare from "./compare";
-import { buildPromptQLPrompt, GITHUB_BOT_PROMPT, parsePromptQLResults } from "@/lib/promptql";
+import { parsePromptQLResults } from "@/lib/promptql";
 import type { Job, Lane, ScreeningResult, Source } from "@/lib/types";
 
 const LANES: { lane: Lane; label: string; hint: string }[] = [
@@ -20,8 +20,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [mode, setMode] = useState<"compare" | "app" | "llm" | "promptql">("compare");
-  const [pasted, setPasted] = useState("");
-  const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
 
   // On open, show the latest real Jev results the PromptQL bot saved to GitHub.
@@ -33,7 +31,6 @@ export default function Home() {
         const { results, errors } = parsePromptQLResults(await res.text(), sampleJob, sampleCandidates);
         if (results.length) {
           setRun({ results, errors, source: "promptql", totalMs: null });
-          setStatus("Showing the latest real Jev results, run through PromptQL and saved to GitHub.");
         }
       } catch {
         /* no saved results yet: page still works */
@@ -74,13 +71,13 @@ export default function Home() {
       if (poll.status === 200) {
         const { results, errors } = parsePromptQLResults(await poll.text(), job, sampleCandidates);
         setRun({ results, errors, source: "promptql", totalMs: Date.now() - started });
-        setStatus(`✓ Results loaded from run ${data.runId}`);
+        setStatus(`✓ Jev results for run ${data.runId}`);
         setLoading(false);
         return;
       }
     }
     setStatus(
-      `No results on GitHub after 5 min. Check the bot thread: it may have saved them as an artifact instead. Paste its JSON in the manual fallback below.`,
+      `No results after 5 min. Check the bot thread in PromptQL.`,
     );
     setLoading(false);
   }
@@ -103,17 +100,6 @@ export default function Home() {
       setRun({ results, errors, source: "llm", totalMs });
     }
     setLoading(false);
-  }
-
-  async function copy(text: string) {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  function loadPasted() {
-    const { results, errors } = parsePromptQLResults(pasted, job, sampleCandidates);
-    setRun({ results, errors, source: "promptql", totalMs: null });
   }
 
   async function loadFromGitHub() {
@@ -190,20 +176,15 @@ export default function Home() {
 
         {mode === "compare" ? (
           <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>
-            The same evidence questions answered three ways: an ATS keyword filter (live), a free open-source LLM
-            running locally (saved run), and Jev through PromptQL (saved run). Change the must-haves above and every
-            column updates.
+            The same evidence questions answered three ways: an ATS keyword filter, a free open-source LLM, and Jev
+            through PromptQL. Change the must-haves above and every column updates.
           </p>
         ) : mode === "llm" ? (
           <div style={{ marginTop: 12 }}>
             <p className="muted" style={{ fontSize: 13 }}>
-              A free open-source model (via Ollama, on a laptop) answers the same evidence questions and writes yes/no
-              plus a confidence number. Saved run from <code>promptql/llm-results.json</code>. To refresh it:{" "}
-              <code>npm run llm:run</code>, then push.
+              A free open-source model (Qwen 2.5 3B via Ollama) answers the same evidence questions and writes yes/no
+              plus a confidence number.
             </p>
-            <button onClick={loadLlm} disabled={loading}>
-              {loading ? "Loading…" : "Load saved LLM results"}
-            </button>
           </div>
         ) : mode === "app" ? (
           <div style={{ marginTop: 12 }}>
@@ -218,7 +199,7 @@ export default function Home() {
           <div style={{ marginTop: 12 }}>
             <p style={{ fontSize: 13 }}>
               <strong>Automatic:</strong> tells your PromptQL bot to run Jev on the resumes in the repo
-              (<code>promptql/requests.json</code>) and save results to GitHub. This page waits and loads them.
+              (<code>promptql/requests.json</code>) and commit the results to GitHub. This page updates when they arrive.
             </p>
             <button onClick={runAutomatic} disabled={loading}>
               {loading ? "Running…" : "Run with PromptQL"}
@@ -229,40 +210,12 @@ export default function Home() {
               </p>
             )}
 
-            <details style={{ marginTop: 14, fontSize: 13 }}>
-              <summary className="muted">Manual fallback (if the automatic run doesn&apos;t come back)</summary>
-            <p style={{ fontSize: 13 }}>
-              <strong>1.</strong> Copy this and paste it into your PromptQL bot. It reads the resumes from GitHub, runs
-              Jev, and saves the results back to the repo.
-            </p>
-            <button onClick={() => copy(GITHUB_BOT_PROMPT)}>{copied ? "Copied ✓" : "Copy bot prompt"}</button>
-
-            <p style={{ fontSize: 13, marginTop: 14 }}>
-              <strong>2a.</strong> Bot saved <code>promptql/results.json</code> to GitHub?
-            </p>
-            <button onClick={loadFromGitHub} disabled={loading}>
-              {loading ? "Loading…" : "Load results from GitHub"}
-            </button>
-
-            <p style={{ fontSize: 13, marginTop: 14 }}>
-              <strong>2b.</strong> Bot replied with JSON instead? Paste it here.
-            </p>
-            <textarea rows={4} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder='{"c1": {...}, "c2": {...}}' />
-            <div className="row" style={{ marginTop: 8 }}>
-              <button onClick={loadPasted} disabled={!pasted.trim()}>
-                Load pasted results
-              </button>
-              <button className="ghost" onClick={() => copy(buildPromptQLPrompt(job, sampleCandidates))}>
-                Copy full prompt (if you edited requirements above)
-              </button>
-            </div>
-            </details>
           </div>
         )}
 
         {run && mode !== "compare" && (
           <div className="stats muted" style={{ marginTop: 12 }}>
-            <span>Source: {run.source === "mock" ? "Keyword baseline (no AI)" : run.source === "llm" ? "Open-source LLM (saved run)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
+            <span>Source: {run.source === "mock" ? "Keyword baseline (no AI)" : run.source === "llm" ? "Open-source LLM" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
             {run.results[0] && <span>{run.results[0].model}</span>}
             {run.totalMs !== null && <span>{run.totalMs} ms total</span>}
             <span>
