@@ -181,7 +181,7 @@ export default function Home() {
               loadFromGitHub();
             }}
           >
-            Through PromptQL
+            Jev
           </button>
           <button className={mode === "compare" ? "" : "ghost"} onClick={() => setMode("compare")}>
             Compare all 3
@@ -208,7 +208,7 @@ export default function Home() {
         ) : mode === "app" ? (
           <div style={{ marginTop: 12 }}>
             <p className="muted" style={{ fontSize: 13 }}>
-              No AI: scores each requirement by matching its words in the resume, like a traditional ATS keyword filter. Compare with Jev under Through PromptQL.
+              No AI: scores each requirement by matching its words in the resume, like a traditional ATS keyword filter. Compare with the Jev tab.
             </p>
             <button onClick={runInApp} disabled={loading}>
               {loading ? "Checking…" : `Check ${sampleCandidates.length} resumes`}
