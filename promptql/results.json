@@ -8,7 +8,7 @@
       },
       "req_python_ts": {
         "type": "noul",
-        "noul": 0.97
+        "noul": 0.98
       },
       "req_rag": {
         "type": "noul",
@@ -20,7 +20,7 @@
       },
       "req_shipped": {
         "type": "noul",
-        "noul": 0.9
+        "noul": 0.91
       },
       "req_startup": {
         "type": "noul",
@@ -28,8 +28,8 @@
       },
       "coverage": {
         "type": "score",
-        "score": 3.63,
-        "confidence": 0.69,
+        "score": 3.61,
+        "confidence": 0.68,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -41,8 +41,8 @@
           "0": 0,
           "1": 0,
           "2": 0.01,
-          "3": 0.34,
-          "4": 0.65
+          "3": 0.37,
+          "4": 0.62
         }
       }
     },
@@ -72,7 +72,7 @@
       },
       "req_shipped": {
         "type": "noul",
-        "noul": 0.14
+        "noul": 0.16
       },
       "req_startup": {
         "type": "noul",
@@ -80,8 +80,8 @@
       },
       "coverage": {
         "type": "score",
-        "score": 0.1,
-        "confidence": 0.91,
+        "score": 0.09,
+        "confidence": 0.92,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -90,8 +90,8 @@
           "4": "Evidence for essentially every requirement"
         },
         "probabilities": {
-          "0": 0.9,
-          "1": 0.1,
+          "0": 0.91,
+          "1": 0.09,
           "2": 0,
           "3": 0,
           "4": 0
@@ -108,11 +108,11 @@
     "answers": {
       "req_llm_agents": {
         "type": "noul",
-        "noul": 0.6
+        "noul": 0.58
       },
       "req_python_ts": {
         "type": "noul",
-        "noul": 0.14
+        "noul": 0.13
       },
       "req_rag": {
         "type": "noul",
@@ -128,12 +128,12 @@
       },
       "req_startup": {
         "type": "noul",
-        "noul": 0.03
+        "noul": 0.02
       },
       "coverage": {
         "type": "score",
         "score": 1.2,
-        "confidence": 0.83,
+        "confidence": 0.82,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -160,7 +160,7 @@
     "answers": {
       "req_llm_agents": {
         "type": "noul",
-        "noul": 0.18
+        "noul": 0.17
       },
       "req_python_ts": {
         "type": "noul",
@@ -168,7 +168,7 @@
       },
       "req_rag": {
         "type": "noul",
-        "noul": 0.04
+        "noul": 0.03
       },
       "req_evals": {
         "type": "noul",
@@ -176,7 +176,7 @@
       },
       "req_shipped": {
         "type": "noul",
-        "noul": 0.95
+        "noul": 0.96
       },
       "req_startup": {
         "type": "noul",
@@ -184,8 +184,8 @@
       },
       "coverage": {
         "type": "score",
-        "score": 1.33,
-        "confidence": 0.72,
+        "score": 1.31,
+        "confidence": 0.74,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -195,9 +195,9 @@
         },
         "probabilities": {
           "0": 0,
-          "1": 0.68,
-          "2": 0.3,
-          "3": 0.02,
+          "1": 0.71,
+          "2": 0.28,
+          "3": 0.01,
           "4": 0
         }
       }
@@ -216,7 +216,7 @@
       },
       "req_python_ts": {
         "type": "noul",
-        "noul": 0.92
+        "noul": 0.93
       },
       "req_rag": {
         "type": "noul",
@@ -224,11 +224,11 @@
       },
       "req_evals": {
         "type": "noul",
-        "noul": 0.45
+        "noul": 0.48
       },
       "req_shipped": {
         "type": "noul",
-        "noul": 0.44
+        "noul": 0.46
       },
       "req_startup": {
         "type": "noul",
@@ -236,8 +236,8 @@
       },
       "coverage": {
         "type": "score",
-        "score": 0.39,
-        "confidence": 0.68,
+        "score": 0.48,
+        "confidence": 0.6,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -246,9 +246,9 @@
           "4": "Evidence for essentially every requirement"
         },
         "probabilities": {
-          "0": 0.63,
-          "1": 0.36,
-          "2": 0.01,
+          "0": 0.56,
+          "1": 0.41,
+          "2": 0.03,
           "3": 0,
           "4": 0
         }
@@ -264,15 +264,15 @@
     "answers": {
       "req_llm_agents": {
         "type": "noul",
-        "noul": 0.95
+        "noul": 0.96
       },
       "req_python_ts": {
         "type": "noul",
-        "noul": 0.83
+        "noul": 0.86
       },
       "req_rag": {
         "type": "noul",
-        "noul": 0.07
+        "noul": 0.06
       },
       "req_evals": {
         "type": "noul",
@@ -288,8 +288,8 @@
       },
       "coverage": {
         "type": "score",
-        "score": 3.86,
-        "confidence": 0.89,
+        "score": 3.91,
+        "confidence": 0.93,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -300,9 +300,9 @@
         "probabilities": {
           "0": 0,
           "1": 0,
-          "2": 0.01,
-          "3": 0.11,
-          "4": 0.88
+          "2": 0,
+          "3": 0.08,
+          "4": 0.92
         }
       }
     },
@@ -340,8 +340,8 @@
       },
       "coverage": {
         "type": "score",
-        "score": 0.09,
-        "confidence": 0.92,
+        "score": 0.07,
+        "confidence": 0.95,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -350,8 +350,8 @@
           "4": "Evidence for essentially every requirement"
         },
         "probabilities": {
-          "0": 0.92,
-          "1": 0.08,
+          "0": 0.94,
+          "1": 0.06,
           "2": 0,
           "3": 0,
           "4": 0
@@ -372,7 +372,7 @@
       },
       "req_python_ts": {
         "type": "noul",
-        "noul": 0.86
+        "noul": 0.87
       },
       "req_rag": {
         "type": "noul",
@@ -380,20 +380,20 @@
       },
       "req_evals": {
         "type": "noul",
-        "noul": 0.93
+        "noul": 0.92
       },
       "req_shipped": {
         "type": "noul",
-        "noul": 0.21
+        "noul": 0.2
       },
       "req_startup": {
         "type": "noul",
-        "noul": 0.25
+        "noul": 0.21
       },
       "coverage": {
         "type": "score",
-        "score": 1.43,
-        "confidence": 0.64,
+        "score": 1.47,
+        "confidence": 0.6,
         "legend": {
           "0": "The resume shows evidence for none of the listed requirements",
           "1": "Evidence for a few requirements",
@@ -403,8 +403,8 @@
         },
         "probabilities": {
           "0": 0,
-          "1": 0.59,
-          "2": 0.39,
+          "1": 0.55,
+          "2": 0.43,
           "3": 0.02,
           "4": 0
         }
@@ -415,5 +415,5 @@
       "output_tokens": 126
     }
   },
-  "_run_id": "f7e51552"
+  "_run_id": "0e45f01b"
 }
