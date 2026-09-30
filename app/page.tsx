@@ -19,7 +19,7 @@ export default function Home() {
   const [run, setRun] = useState<Run | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const [mode, setMode] = useState<"compare" | "app" | "promptql">("compare");
+  const [mode, setMode] = useState<"compare" | "app" | "llm" | "promptql">("compare");
   const [pasted, setPasted] = useState("");
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
@@ -85,6 +85,26 @@ export default function Home() {
     setLoading(false);
   }
 
+  async function loadLlm() {
+    setLoading(true);
+    setRun(null);
+    const res = await fetch("/api/llm-results", { cache: "no-store" });
+    const text = await res.text();
+    if (!res.ok) {
+      setRun({ results: [], errors: [JSON.parse(text).error], source: "llm", totalMs: null });
+    } else {
+      let totalMs: number | null = null;
+      try {
+        totalMs = JSON.parse(text)._meta?.total_ms ?? null;
+      } catch {
+        /* ignore */
+      }
+      const { results, errors } = parsePromptQLResults(text, job, sampleCandidates);
+      setRun({ results, errors, source: "llm", totalMs });
+    }
+    setLoading(false);
+  }
+
   async function copy(text: string) {
     await navigator.clipboard.writeText(text);
     setCopied(true);
@@ -142,6 +162,15 @@ export default function Home() {
           <button className={mode === "app" ? "" : "ghost"} onClick={() => setMode("app")}>
             Keyword baseline (old-school ATS)
           </button>
+          <button
+            className={mode === "llm" ? "" : "ghost"}
+            onClick={() => {
+              setMode("llm");
+              loadLlm();
+            }}
+          >
+            Open-source LLM
+          </button>
           <button className={mode === "promptql" ? "" : "ghost"} onClick={() => setMode("promptql")}>
             Through PromptQL
           </button>
@@ -153,6 +182,17 @@ export default function Home() {
             running locally (saved run), and Jev through PromptQL (saved run). Change the must-haves above and every
             column updates.
           </p>
+        ) : mode === "llm" ? (
+          <div style={{ marginTop: 12 }}>
+            <p className="muted" style={{ fontSize: 13 }}>
+              A free open-source model (via Ollama, on a laptop) answers the same evidence questions and writes yes/no
+              plus a confidence number. Saved run from <code>promptql/llm-results.json</code>. To refresh it:{" "}
+              <code>npm run llm:run</code>, then push.
+            </p>
+            <button onClick={loadLlm} disabled={loading}>
+              {loading ? "Loading…" : "Load saved LLM results"}
+            </button>
+          </div>
         ) : mode === "app" ? (
           <div style={{ marginTop: 12 }}>
             <p className="muted" style={{ fontSize: 13 }}>
@@ -210,10 +250,15 @@ export default function Home() {
 
         {run && mode !== "compare" && (
           <div className="stats muted" style={{ marginTop: 12 }}>
-            <span>Source: {run.source === "mock" ? "Keyword baseline (no AI)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
+            <span>Source: {run.source === "mock" ? "Keyword baseline (no AI)" : run.source === "llm" ? "Open-source LLM (saved run)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
             {run.results[0] && <span>{run.results[0].model}</span>}
             {run.totalMs !== null && <span>{run.totalMs} ms total</span>}
-            <span>{tokens.toLocaleString()} input tokens ≈ ${((tokens / 1e6) * 0.042).toFixed(5)}</span>
+            <span>
+              {tokens.toLocaleString()} input tokens
+              {run.source === "promptql" || run.source === "live"
+                ? ` ≈ $${((tokens / 1e6) * 0.042).toFixed(5)}`
+                : " · $0"}
+            </span>
           </div>
         )}
         {mode !== "compare" && run?.errors.map((e) => (

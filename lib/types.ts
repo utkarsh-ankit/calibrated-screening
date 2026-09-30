@@ -62,4 +62,4 @@ export type ScreeningResult = {
   model: string;
 };
 
-export type Source = "live" | "mock" | "promptql";
+export type Source = "live" | "mock" | "promptql" | "llm";
