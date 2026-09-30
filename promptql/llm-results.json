@@ -1,0 +1,386 @@
+{
+  "c1": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Built a multi-step LLM agent that triages inbound support tickets and drafts replies; 40k tickets/month."
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Built a multi-step LLM agent that triages inbound support tickets and drafts replies; 40k tickets/month. Built a hybrid BM25 + embedding retrieval layer over 1M help-center docs. Stack: Python (FastAPI), TypeScript (Next.js)."
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Built a hybrid BM25 + embedding retrieval layer over 1M help-center docs."
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Designed an offline eval harness (labeled set of 2k tickets, precision/recall per route) run in CI."
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Senior ML Engineer, Pathlight (Series A, 25 people), 2022–present."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Senior ML Engineer, Pathlight (Series A, 25 people), 2022–present."
+      },
+      "coverage": {
+        "type": "score",
+        "score": 4,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1847,
+      "output_tokens": 318
+    },
+    "ms": 13789
+  },
+  "c2": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Wrote ChatGPT prompts to draft product descriptions."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "coverage": {
+        "type": "score",
+        "score": 0,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1397,
+      "output_tokens": 156
+    },
+    "ms": 6458
+  },
+  "c3": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Built a chatbot that answers questions about my lab's papers using a vector database."
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "- Built a benchmark suite comparing 6 RL algorithms across 12 environments."
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Built a benchmark suite comparing 6 RL algorithms across 12 environments."
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Side project: a chatbot that answers questions about my lab's papers using a vector database."
+      },
+      "coverage": {
+        "type": "score",
+        "score": 0.67,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1583,
+      "output_tokens": 216
+    },
+    "ms": 8609
+  },
+  "c4": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Integrated OpenAI API to summarize intake forms for clinicians."
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Owned Postgres schema and Vercel deploys."
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Owned Postgres schema and Vercel deploys."
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Built patient onboarding flow in React/TypeScript and Node; 15k monthly users."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Tally Health (seed stage, 8 people), 2023–present."
+      },
+      "coverage": {
+        "type": "score",
+        "score": 2,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1559,
+      "output_tokens": 222
+    },
+    "ms": 8861
+  },
+  "c5": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Led A/B testing framework for the mobile app."
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 0.8,
+        "evidence": "Led A/B testing framework for the mobile app."
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Led A/B testing framework for the mobile app."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "coverage": {
+        "type": "score",
+        "score": 1.2,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1385,
+      "output_tokens": 154
+    },
+    "ms": 6361
+  },
+  "c6": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Built an open-source framework for tool-calling LLM agents (2.1k GitHub stars), Python + TypeScript SDKs."
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Built an open-source framework for tool-calling LLM agents (2.1k GitHub stars), Python + TypeScript SDKs."
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Built an open-source framework for tool-calling LLM agents (2.1k GitHub stars), Python + TypeScript SDKs."
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Wrote LLM-as-judge and trajectory-level evals to benchmark agents on web tasks; published leaderboard."
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Sold to 3 pilot customers; ran onboarding and support myself."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "Founder, AgentForge (YC-style startup, shut down 2025)."
+      },
+      "coverage": {
+        "type": "score",
+        "score": 3.33,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1655,
+      "output_tokens": 282
+    },
+    "ms": 11137
+  },
+  "c7": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Maintains policy administration system (Java 8, Oracle, Spring). Migrated batch jobs from mainframe to Linux."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": ""
+      },
+      "coverage": {
+        "type": "score",
+        "score": 0,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1289,
+      "output_tokens": 144
+    },
+    "ms": 5989
+  },
+  "c8": {
+    "model": "ollama/qwen2.5:3b",
+    "answers": {
+      "req_llm_agents": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "- Experimented with LLM summarization for search results."
+      },
+      "req_python_ts": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Built semantic search over 5M clinical documents (embeddings, reranking) in Python."
+      },
+      "req_rag": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Built semantic search over 5M clinical documents (embeddings, reranking) in Python."
+      },
+      "req_evals": {
+        "type": "noul",
+        "noul": 1,
+        "evidence": "- Set up offline relevance metrics (nDCG, MRR) for ranking changes."
+      },
+      "req_shipped": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Built semantic search over 5M clinical documents (embeddings, reranking) in Python."
+      },
+      "req_startup": {
+        "type": "noul",
+        "noul": 0,
+        "evidence": "Data Engineer, Rakuten, 2019–2022."
+      },
+      "coverage": {
+        "type": "score",
+        "score": 2,
+        "legend": {},
+        "probabilities": {},
+        "confidence": 0
+      }
+    },
+    "usage": {
+      "input_tokens": 1529,
+      "output_tokens": 252
+    },
+    "ms": 10188
+  },
+  "_meta": {
+    "model": "ollama/qwen2.5:3b",
+    "total_ms": 71399,
+    "calls": 48,
+    "parse_failures": 0,
+    "cost_usd": 0,
+    "created_at": "2026-09-30T08:18:29.464Z"
+  }
+}
