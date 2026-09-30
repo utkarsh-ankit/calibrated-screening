@@ -2,7 +2,9 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
-// GitHub contents API: fresher than raw.githubusercontent.com, which caches for minutes.
+// raw.githubusercontent.com: no rate limit but cached for a few minutes (fine for the page's initial load).
+const RAW = "https://raw.githubusercontent.com/utkarsh-ankit/calibrated-screening/main/promptql/results.json";
+// GitHub contents API: fresh, but 60 requests/hour without a token. Used while waiting for a specific run.
 const API = "https://api.github.com/repos/utkarsh-ankit/calibrated-screening/contents/promptql/results.json?ref=main";
 
 async function fromGitHub(): Promise<string | null> {
@@ -11,6 +13,15 @@ async function fromGitHub(): Promise<string | null> {
     // Optional: unauthenticated GitHub API allows 60 requests/hour; a token raises that.
     if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
     const res = await fetch(API, { headers, cache: "no-store" });
+    return res.ok ? await res.text() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fromRaw(): Promise<string | null> {
+  try {
+    const res = await fetch(RAW, { cache: "no-store" });
     return res.ok ? await res.text() : null;
   } catch {
     return null;
@@ -31,7 +42,7 @@ async function fromLocal(): Promise<string | null> {
  */
 export async function GET(req: Request) {
   const runId = new URL(req.url).searchParams.get("run_id");
-  const text = (await fromGitHub()) ?? (runId ? null : await fromLocal());
+  const text = runId ? await fromGitHub() : ((await fromRaw()) ?? (await fromGitHub()) ?? (await fromLocal()));
 
   if (!text) {
     return NextResponse.json(

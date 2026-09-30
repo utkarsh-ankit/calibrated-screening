@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sampleCandidates, sampleJob } from "@/data/sample";
 import { buildPromptQLPrompt, GITHUB_BOT_PROMPT, parsePromptQLResults } from "@/lib/promptql";
 import type { Job, Lane, ScreeningResult, Source } from "@/lib/types";
@@ -18,10 +18,27 @@ export default function Home() {
   const [run, setRun] = useState<Run | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const [mode, setMode] = useState<"app" | "promptql">("app");
+  const [mode, setMode] = useState<"app" | "promptql">("promptql");
   const [pasted, setPasted] = useState("");
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
+
+  // On open, show the latest real Jev results the PromptQL bot saved to GitHub.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/promptql-results", { cache: "no-store" });
+        if (!res.ok) return;
+        const { results, errors } = parsePromptQLResults(await res.text(), sampleJob, sampleCandidates);
+        if (results.length) {
+          setRun({ results, errors, source: "promptql", totalMs: null });
+          setStatus("Showing the latest real Jev results, run through PromptQL and saved to GitHub.");
+        }
+      } catch {
+        /* no saved results yet: page still works */
+      }
+    })();
+  }, []);
 
   async function runInApp() {
     setLoading(true);
