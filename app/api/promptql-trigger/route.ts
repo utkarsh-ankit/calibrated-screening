@@ -23,7 +23,7 @@ export async function POST() {
   const { PROMPTQL_WEBHOOK_URL, PROMPTQL_PAT } = process.env;
   if (!PROMPTQL_WEBHOOK_URL || !PROMPTQL_PAT) {
     return NextResponse.json(
-      { error: "Set PROMPTQL_WEBHOOK_URL and PROMPTQL_PAT in .env.local, then restart npm run dev." },
+      { error: "Live Jev runs need the PromptQL webhook credentials on the server (PROMPTQL_WEBHOOK_URL and PROMPTQL_PAT in .env.local)." },
       { status: 500 },
     );
   }

@@ -52,8 +52,7 @@ export default function Home() {
 
   async function runAutomatic() {
     setLoading(true);
-    setRun(null);
-    setStatus("Sending resumes to PromptQL…");
+    setStatus("Sending the run to the PromptQL bot…");
     const res = await fetch("/api/promptql-trigger", { method: "POST" });
     const data = await res.json();
     if (!res.ok) {
@@ -65,13 +64,13 @@ export default function Home() {
     // Poll GitHub (via our server) until the bot commits results tagged with this run.
     const started = Date.now();
     for (let i = 1; i <= 30; i++) {
-      setStatus(`Bot is running Jev (run ${data.runId})… waiting for results on GitHub, ${Math.round((Date.now() - started) / 1000)}s`);
+      setStatus(`PromptQL bot is running Jev on 8 resumes… ${Math.round((Date.now() - started) / 1000)}s`);
       await new Promise((r) => setTimeout(r, 10000));
       const poll = await fetch(`/api/promptql-results?run_id=${data.runId}`, { cache: "no-store" });
       if (poll.status === 200) {
         const { results, errors } = parsePromptQLResults(await poll.text(), job, sampleCandidates);
         setRun({ results, errors, source: "promptql", totalMs: Date.now() - started });
-        setStatus(`✓ Jev results for run ${data.runId}`);
+        setStatus(`✓ Done: run ${data.runId}, 8 Jev calls.`);
         setLoading(false);
         return;
       }
@@ -79,6 +78,32 @@ export default function Home() {
     setStatus(
       `No results after 5 min. Check the bot thread in PromptQL.`,
     );
+    setLoading(false);
+  }
+
+  async function runLlm() {
+    setLoading(true);
+    setStatus("Open-source LLM is reading 8 resumes on this machine (one call per requirement)… about a minute.");
+    const res = await fetch("/api/llm-run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job, candidates: sampleCandidates }),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      let msg = text;
+      try {
+        msg = JSON.parse(text).error;
+      } catch {
+        /* keep raw text */
+      }
+      setStatus(`❌ ${msg}`);
+    } else {
+      const meta = JSON.parse(text)._meta as { total_ms: number; parse_failures: number; calls: number };
+      const { results, errors } = parsePromptQLResults(text, job, sampleCandidates);
+      setRun({ results, errors, source: "llm", totalMs: meta.total_ms });
+      setStatus(`✓ Done: ${meta.calls} calls, ${meta.parse_failures} unusable answers.`);
+    }
     setLoading(false);
   }
 
@@ -146,6 +171,7 @@ export default function Home() {
             className={mode === "app" ? "" : "ghost"}
             onClick={() => {
               setMode("app");
+              setStatus("");
               runInApp();
             }}
           >
@@ -155,6 +181,7 @@ export default function Home() {
             className={mode === "llm" ? "" : "ghost"}
             onClick={() => {
               setMode("llm");
+              setStatus("");
               loadLlm();
             }}
           >
@@ -164,6 +191,7 @@ export default function Home() {
             className={mode === "promptql" ? "" : "ghost"}
             onClick={() => {
               setMode("promptql");
+              setStatus("");
               loadFromGitHub();
             }}
           >
@@ -179,37 +207,29 @@ export default function Home() {
             The same evidence questions answered three ways: an ATS keyword filter, a free open-source LLM, and Jev
             through PromptQL. Change the must-haves above and every column updates.
           </p>
-        ) : mode === "llm" ? (
-          <div style={{ marginTop: 12 }}>
-            <p className="muted" style={{ fontSize: 13 }}>
-              A free open-source model (Qwen 2.5 3B via Ollama) answers the same evidence questions and writes yes/no
-              plus a confidence number.
-            </p>
-          </div>
-        ) : mode === "app" ? (
-          <div style={{ marginTop: 12 }}>
-            <p className="muted" style={{ fontSize: 13 }}>
-              No AI: scores each requirement by matching its words in the resume, like a traditional ATS keyword filter. Compare with the Jev tab.
-            </p>
-            <button onClick={runInApp} disabled={loading}>
-              {loading ? "Checking…" : `Check ${sampleCandidates.length} resumes`}
-            </button>
-          </div>
         ) : (
           <div style={{ marginTop: 12 }}>
-            <p style={{ fontSize: 13 }}>
-              <strong>Automatic:</strong> tells your PromptQL bot to run Jev on the resumes in the repo
-              (<code>promptql/requests.json</code>) and commit the results to GitHub. This page updates when they arrive.
+            <p className="muted" style={{ fontSize: 13 }}>
+              {mode === "app"
+                ? "No AI: scores each requirement by matching its words in the resume, like a traditional ATS keyword filter."
+                : mode === "llm"
+                  ? "A free open-source model (Qwen 2.5 3B via Ollama) reads each resume and writes yes/no plus a confidence number for each requirement."
+                  : "Jev, run through a PromptQL bot, returns a probability that each resume shows evidence for each requirement."}
             </p>
-            <button onClick={runAutomatic} disabled={loading}>
-              {loading ? "Running…" : "Run with PromptQL"}
+            <button onClick={mode === "app" ? runInApp : mode === "llm" ? runLlm : runAutomatic} disabled={loading}>
+              {loading
+                ? "Running…"
+                : mode === "app"
+                  ? "Run keyword baseline"
+                  : mode === "llm"
+                    ? "Run open-source LLM"
+                    : "Run Jev"}
             </button>
             {status && (
               <p className="muted" style={{ fontSize: 13 }}>
                 {status}
               </p>
             )}
-
           </div>
         )}
 

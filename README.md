@@ -53,7 +53,7 @@ The rules live in one small function: `assignLane` in [`lib/screening.ts`](lib/s
 |---|---|---|
 | **Mock** | Building the UI, no access yet | Default. Fake answers from keyword matching. **Not real.** |
 | **Live** | You have a TypeSafe key | Put `TYPESAFE_API_KEY` in `.env.local` |
-| **Through PromptQL** | No key of your own, but PromptQL's bot can call Jev | The bot reads `promptql/requests.json` from this repo, runs Jev, and commits `promptql/results.json`. In the app: **Through PromptQL** → **Load results from GitHub** |
+| **Jev** | No key of your own, but PromptQL's bot can call Jev | The bot reads `promptql/requests.json` from this repo, runs Jev, and commits `promptql/results.json`. In the app: **Jev** → **Load results from GitHub** |
 
 Full steps and the prompt to give the bot: [`promptql/README.md`](promptql/README.md). If the bot can't write to GitHub,
 it replies with the JSON and you paste it into the app instead.

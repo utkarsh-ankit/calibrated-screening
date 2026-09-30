@@ -12,7 +12,7 @@ App button → your Next.js server → PromptQL webhook → bot runs Jev → bot
    PROMPTQL_WEBHOOK_URL=https://...
    PROMPTQL_PAT=...
    ```
-3. Restart `npm run dev`. In the app: **Through PromptQL** → **Run with PromptQL**.
+3. Restart `npm run dev`. In the app: **Jev** → **Run Jev**.
 
 The app sends a run ID with the request and waits until `promptql/results.json` on GitHub carries that same
 `_run_id`, so old results are never shown by mistake. It checks every 10 s for up to 5 minutes.
@@ -46,7 +46,7 @@ promptql/results.json   ◄──(bot saves)─────────┘
 
 ## Step 2: load it in the app
 
-- **If the bot committed the file:** open the app → **Through PromptQL** → **Load results from GitHub**.
+- **If the bot committed the file:** open the app → **Jev** → **Load results from GitHub**.
 - **If the bot replied with JSON:** paste it into the box in the app → **Load results**.
   (Or save it as `promptql/results.json`, commit, push, then use the GitHub button.)
 
