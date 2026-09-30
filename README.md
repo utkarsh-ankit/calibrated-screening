@@ -53,10 +53,10 @@ The rules live in one small function: `assignLane` in [`lib/screening.ts`](lib/s
 |---|---|---|
 | **Mock** | Building the UI, no access yet | Default. Fake answers from keyword matching. **Not real.** |
 | **Live** | You have a TypeSafe key | Put `TYPESAFE_API_KEY` in `.env.local` |
-| **Through PromptQL** | No key of your own, but PromptQL's bot can call Jev | Click **Through PromptQL** in the app → **Copy prompt** → paste into the bot → paste its JSON reply back → **Load results** |
+| **Through PromptQL** | No key of your own, but PromptQL's bot can call Jev | The bot reads `promptql/requests.json` from this repo, runs Jev, and commits `promptql/results.json`. In the app: **Through PromptQL** → **Load results from GitHub** |
 
-The PromptQL bot calls Jev with its own credentials and sends back the raw responses. The app interprets them exactly
-like live results. A ready-made prompt for the sample data is in [`promptql/sample-prompt.md`](promptql/sample-prompt.md).
+Full steps and the prompt to give the bot: [`promptql/README.md`](promptql/README.md). If the bot can't write to GitHub,
+it replies with the JSON and you paste it into the app instead.
 
 ## Run it
 
@@ -72,7 +72,9 @@ npm run dev                  # http://localhost:3000
 app/page.tsx             UI: requirements editor, run buttons, three review queues
 app/api/screen/route.ts  Server route for live/mock runs (keeps the API key server-side)
 lib/screening.ts         ★ The logic: questions sent to Jev + how answers become queues
-lib/promptql.ts          Builds the PromptQL prompt; parses the bot's reply
+lib/promptql.ts          Bot prompts for PromptQL; parses the bot's Jev results
+promptql/                requests.json (bot reads) → results.json (bot writes)
+scripts/export-requests.ts  Regenerates promptql/requests.json (npm run promptql:export)
 lib/jev.ts               Jev HTTP client + mock
 lib/screen-server.ts     Server-side glue: call Jev → interpret
 data/sample.ts           Fictional job + 8 fictional resumes (clear, weak and ambiguous on purpose)

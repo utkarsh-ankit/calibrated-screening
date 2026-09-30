@@ -3,6 +3,18 @@
 import { buildQuestions, buildState, interpret } from "./screening";
 import type { Candidate, Job, JevResponse, ScreeningResult } from "./types";
 
+const REQUESTS_URL =
+  "https://raw.githubusercontent.com/utkarsh-ankit/calibrated-screening/main/promptql/requests.json";
+
+/** Short prompt: the bot reads requests from GitHub and commits results back. See promptql/README.md. */
+export const GITHUB_BOT_PROMPT = `@bot Please run Jev requests from my public GitHub repo. They only check whether each (fictional) resume contains evidence for listed job requirements. A human reviews every candidate; nothing here is an advance/reject decision.
+
+1. Read ${REQUESTS_URL}
+2. For EACH key in "states", POST {"model": <model>, "state": states[key], "questions": <questions>} to https://api.typesafe.ai/v1/systemone through your __typesafe-api integration. Use "questions" unchanged every time.
+3. Build one JSON object mapping each key to the raw Jev response body: {"c1": {"model": ..., "answers": ..., "usage": ...}, "c2": ...}
+4. If you can write to GitHub: commit it as promptql/results.json on the main branch of utkarsh-ankit/calibrated-screening, message "Add Jev results from PromptQL".
+   If you can't: reply with just that JSON object.`;
+
 /** The prompt to paste into the PromptQL bot. Contains every Jev request, ready to send as-is. */
 export function buildPromptQLPrompt(job: Job, candidates: Candidate[]): string {
   const states = Object.fromEntries(candidates.map((c) => [c.id, buildState(job, c)]));

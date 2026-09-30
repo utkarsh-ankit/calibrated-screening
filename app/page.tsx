@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { sampleCandidates, sampleJob } from "@/data/sample";
-import { buildPromptQLPrompt, parsePromptQLResults } from "@/lib/promptql";
+import { buildPromptQLPrompt, GITHUB_BOT_PROMPT, parsePromptQLResults } from "@/lib/promptql";
 import type { Job, Lane, ScreeningResult, Source } from "@/lib/types";
 
 const LANES: { lane: Lane; label: string; hint: string }[] = [
@@ -34,8 +34,8 @@ export default function Home() {
     setLoading(false);
   }
 
-  async function copyPrompt() {
-    await navigator.clipboard.writeText(buildPromptQLPrompt(job, sampleCandidates));
+  async function copy(text: string) {
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -43,6 +43,19 @@ export default function Home() {
   function loadPasted() {
     const { results, errors } = parsePromptQLResults(pasted, job, sampleCandidates);
     setRun({ results, errors, source: "promptql", totalMs: null });
+  }
+
+  async function loadFromGitHub() {
+    setLoading(true);
+    const res = await fetch("/api/promptql-results", { cache: "no-store" });
+    const text = await res.text();
+    if (!res.ok) {
+      setRun({ results: [], errors: [JSON.parse(text).error], source: "promptql", totalMs: null });
+    } else {
+      const { results, errors } = parsePromptQLResults(text, job, sampleCandidates);
+      setRun({ results, errors, source: "promptql", totalMs: null });
+    }
+    setLoading(false);
   }
 
   const updateReq = (i: number, patch: Partial<Job["requirements"][number]>) =>
@@ -93,16 +106,30 @@ export default function Home() {
         ) : (
           <div style={{ marginTop: 12 }}>
             <p style={{ fontSize: 13 }}>
-              <strong>1.</strong> Copy the prompt and paste it into your PromptQL bot. It runs the real Jev calls.
+              <strong>1.</strong> Copy this and paste it into your PromptQL bot. It reads the resumes from GitHub, runs
+              Jev, and saves the results back to the repo.
             </p>
-            <button onClick={copyPrompt}>{copied ? "Copied ✓" : "Copy prompt"}</button>
-            <p style={{ fontSize: 13, marginTop: 12 }}>
-              <strong>2.</strong> Paste the bot&apos;s JSON reply here.
+            <button onClick={() => copy(GITHUB_BOT_PROMPT)}>{copied ? "Copied ✓" : "Copy bot prompt"}</button>
+
+            <p style={{ fontSize: 13, marginTop: 14 }}>
+              <strong>2a.</strong> Bot saved <code>promptql/results.json</code> to GitHub?
             </p>
-            <textarea rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder='{"c1": {...}, "c2": {...}}' />
-            <button onClick={loadPasted} disabled={!pasted.trim()} style={{ marginTop: 8 }}>
-              Load results
+            <button onClick={loadFromGitHub} disabled={loading}>
+              {loading ? "Loading…" : "Load results from GitHub"}
             </button>
+
+            <p style={{ fontSize: 13, marginTop: 14 }}>
+              <strong>2b.</strong> Bot replied with JSON instead? Paste it here.
+            </p>
+            <textarea rows={4} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder='{"c1": {...}, "c2": {...}}' />
+            <div className="row" style={{ marginTop: 8 }}>
+              <button onClick={loadPasted} disabled={!pasted.trim()}>
+                Load pasted results
+              </button>
+              <button className="ghost" onClick={() => copy(buildPromptQLPrompt(job, sampleCandidates))}>
+                Copy full prompt (if you edited requirements above)
+              </button>
+            </div>
           </div>
         )}
 
