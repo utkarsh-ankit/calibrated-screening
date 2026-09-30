@@ -156,9 +156,6 @@ export default function Home() {
         ))}
 
         <div className="row" style={{ marginTop: 16 }}>
-          <button className={mode === "compare" ? "" : "ghost"} onClick={() => setMode("compare")}>
-            Compare all 3
-          </button>
           <button
             className={mode === "app" ? "" : "ghost"}
             onClick={() => {
@@ -185,6 +182,9 @@ export default function Home() {
             }}
           >
             Through PromptQL
+          </button>
+          <button className={mode === "compare" ? "" : "ghost"} onClick={() => setMode("compare")}>
+            Compare all 3
           </button>
         </div>
 
