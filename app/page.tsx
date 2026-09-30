@@ -21,6 +21,7 @@ export default function Home() {
   const [mode, setMode] = useState<"app" | "promptql">("app");
   const [pasted, setPasted] = useState("");
   const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState("");
 
   async function runInApp() {
     setLoading(true);
@@ -31,6 +32,42 @@ export default function Home() {
       body: JSON.stringify({ job, candidates: sampleCandidates }),
     });
     setRun(await res.json());
+    setLoading(false);
+  }
+
+  async function runAutomatic() {
+    setLoading(true);
+    setRun(null);
+    setStatus("Sending resumes to PromptQL…");
+    const res = await fetch("/api/promptql-trigger", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job, candidates: sampleCandidates }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(`❌ ${data.error}`);
+      setLoading(false);
+      return;
+    }
+
+    // Poll GitHub (via our server) until the bot commits results tagged with this run.
+    const started = Date.now();
+    for (let i = 1; i <= 30; i++) {
+      setStatus(`Bot is running Jev (run ${data.runId})… waiting for results on GitHub, ${Math.round((Date.now() - started) / 1000)}s`);
+      await new Promise((r) => setTimeout(r, 10000));
+      const poll = await fetch(`/api/promptql-results?run_id=${data.runId}`, { cache: "no-store" });
+      if (poll.status === 200) {
+        const { results, errors } = parsePromptQLResults(await poll.text(), job, sampleCandidates);
+        setRun({ results, errors, source: "promptql", totalMs: Date.now() - started });
+        setStatus(`✓ Results loaded from run ${data.runId}`);
+        setLoading(false);
+        return;
+      }
+    }
+    setStatus(
+      `No results on GitHub after 5 min. Check the bot thread: it may have saved them as an artifact instead. Paste its JSON in the manual fallback below.`,
+    );
     setLoading(false);
   }
 
@@ -106,6 +143,21 @@ export default function Home() {
         ) : (
           <div style={{ marginTop: 12 }}>
             <p style={{ fontSize: 13 }}>
+              <strong>Automatic:</strong> sends the resumes to your PromptQL bot, which runs Jev and saves results to
+              GitHub. This page waits and loads them.
+            </p>
+            <button onClick={runAutomatic} disabled={loading}>
+              {loading ? "Running…" : "Run with PromptQL"}
+            </button>
+            {status && (
+              <p className="muted" style={{ fontSize: 13 }}>
+                {status}
+              </p>
+            )}
+
+            <details style={{ marginTop: 14, fontSize: 13 }}>
+              <summary className="muted">Manual fallback (if the automatic run doesn&apos;t come back)</summary>
+            <p style={{ fontSize: 13 }}>
               <strong>1.</strong> Copy this and paste it into your PromptQL bot. It reads the resumes from GitHub, runs
               Jev, and saves the results back to the repo.
             </p>
@@ -130,6 +182,7 @@ export default function Home() {
                 Copy full prompt (if you edited requirements above)
               </button>
             </div>
+            </details>
           </div>
         )}
 

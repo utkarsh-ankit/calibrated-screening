@@ -1,6 +1,28 @@
-# Running Jev through PromptQL (via GitHub)
+# Running Jev through PromptQL
 
-No copy-pasting. The bot reads the requests from this repo and saves its results back here.
+## Automatic (one click)
+
+```
+App button → your Next.js server → PromptQL webhook → bot runs Jev → bot commits promptql/results.json → app loads it
+```
+
+1. In your PromptQL bot's webhook setup, copy the **webhook URL** and create a **PAT** (token) restricted to that bot.
+2. Put them in `.env.local` (never commit this file):
+   ```
+   PROMPTQL_WEBHOOK_URL=https://...
+   PROMPTQL_PAT=...
+   ```
+3. Restart `npm run dev`. In the app: **Through PromptQL** → **Run with PromptQL**.
+
+The app sends a run ID with the request and waits until `promptql/results.json` on GitHub carries that same
+`_run_id`, so old results are never shown by mistake. It checks every 10 s for up to 5 minutes.
+
+**Needs:** the bot must be able to commit to `utkarsh-ankit/calibrated-screening`. If it can't, it saves the results
+as an artifact in PromptQL. Use the manual flow below to paste them.
+
+---
+
+## Manual fallback
 
 ```
 promptql/requests.json  ──(bot reads)──►  PromptQL bot  ──(calls)──►  Jev
