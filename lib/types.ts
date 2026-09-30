@@ -39,22 +39,27 @@ export type Job = { title: string; description: string; requirements: Requiremen
 
 export type Candidate = { id: string; name: string; resume: string };
 
-export type Route = "advance" | "reject" | "human_review";
+/**
+ * Which review queue a candidate lands in. None of these is a decision:
+ * a human reviews every candidate. The queue only says where to look first and why.
+ */
+export type Lane = "strong" | "closer_look" | "gaps";
 
 export type RequirementResult = {
   requirement: Requirement;
-  pMet: number; // P(yes) from Jev
-  band: "met" | "unclear" | "missing";
+  pEvidence: number; // Jev's P(yes): "the resume shows evidence for this requirement"
+  band: "evidenced" | "unclear" | "not_found";
 };
 
 export type ScreeningResult = {
   candidate: Candidate;
   requirements: RequirementResult[];
-  fit: { score: number; max: number; confidence: number; probabilities: Record<string, number> };
-  decision: { choice: string; confidence: number; probabilities: Record<string, number> };
-  route: Route;
-  reasons: string[]; // why it was routed where it was (shown to recruiter AND candidate)
-  latencyMs: number;
+  coverage: { score: number; max: number; confidence: number };
+  lane: Lane;
+  reasons: string[]; // plain-language, shown to the reviewer
+  latencyMs: number | null; // null when results were imported from PromptQL
   inputTokens: number;
   model: string;
 };
+
+export type Source = "live" | "mock" | "promptql";

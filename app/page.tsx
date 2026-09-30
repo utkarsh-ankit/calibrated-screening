@@ -2,54 +2,64 @@
 
 import { useState } from "react";
 import { sampleCandidates, sampleJob } from "@/data/sample";
-import type { Job, Route, ScreeningResult } from "@/lib/types";
+import { buildPromptQLPrompt, parsePromptQLResults } from "@/lib/promptql";
+import type { Job, Lane, ScreeningResult, Source } from "@/lib/types";
 
-const LANES: { route: Route; label: string }[] = [
-  { route: "advance", label: "Advance" },
-  { route: "human_review", label: "Human review" },
-  { route: "reject", label: "Reject" },
+const LANES: { lane: Lane; label: string; hint: string }[] = [
+  { lane: "strong", label: "Strong evidence", hint: "Every must-have is backed by the resume" },
+  { lane: "closer_look", label: "Needs a closer look", hint: "The model is unsure about a must-have" },
+  { lane: "gaps", label: "Evidence gaps", hint: "No evidence found for a must-have — confirm before deciding" },
 ];
 
-type ApiResponse = {
-  results: ScreeningResult[];
-  errors: { candidateId: string; error: string }[];
-  mock: boolean;
-  totalMs: number;
-};
+type Run = { results: ScreeningResult[]; errors: string[]; source: Source; totalMs: number | null };
 
 export default function Home() {
   const [job, setJob] = useState<Job>(sampleJob);
-  const [data, setData] = useState<ApiResponse | null>(null);
+  const [run, setRun] = useState<Run | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const [mode, setMode] = useState<"app" | "promptql">("app");
+  const [pasted, setPasted] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  async function run() {
+  async function runInApp() {
     setLoading(true);
-    setData(null);
+    setRun(null);
     const res = await fetch("/api/screen", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ job, candidates: sampleCandidates }),
     });
-    setData(await res.json());
+    setRun(await res.json());
     setLoading(false);
+  }
+
+  async function copyPrompt() {
+    await navigator.clipboard.writeText(buildPromptQLPrompt(job, sampleCandidates));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function loadPasted() {
+    const { results, errors } = parsePromptQLResults(pasted, job, sampleCandidates);
+    setRun({ results, errors, source: "promptql", totalMs: null });
   }
 
   const updateReq = (i: number, patch: Partial<Job["requirements"][number]>) =>
     setJob((j) => ({ ...j, requirements: j.requirements.map((r, k) => (k === i ? { ...r, ...patch } : r)) }));
 
-  const tokens = data?.results.reduce((a, r) => a + r.inputTokens, 0) ?? 0;
+  const tokens = run?.results.reduce((a, r) => a + r.inputTokens, 0) ?? 0;
 
   return (
     <main>
       <h1>Calibrated Screening</h1>
       <p className="muted">
-        Screens candidates with Jev. Clear cases get decided; uncertain ones go to a human, with the reason shown.
+        Jev checks each resume for evidence of every requirement and says how sure it is. Candidates are sorted into
+        review queues. A person makes every decision.
       </p>
 
       <div className="panel">
         <h2>{job.title}</h2>
-        <textarea rows={4} value={job.description} onChange={(e) => setJob({ ...job, description: e.target.value })} />
         <h2 style={{ marginTop: 14 }}>Requirements</h2>
         {job.requirements.map((r, i) => (
           <div className="req" key={r.id}>
@@ -60,37 +70,78 @@ export default function Home() {
             </label>
           </div>
         ))}
-        <div className="row" style={{ marginTop: 12 }}>
-          <button onClick={run} disabled={loading}>
-            {loading ? "Screening…" : `Screen ${sampleCandidates.length} candidates`}
+
+        <div className="row" style={{ marginTop: 16 }}>
+          <span className="muted">Run Jev:</span>
+          <button className={mode === "app" ? "" : "ghost"} onClick={() => setMode("app")}>
+            In this app
           </button>
-          {data && (
-            <div className="stats muted">
-              <span>{data.mock ? "MOCK MODE" : data.results[0]?.model}</span>
-              <span>{data.totalMs} ms total</span>
-              <span>{tokens.toLocaleString()} input tokens</span>
-              <span>≈ ${((tokens / 1e6) * 0.042).toFixed(5)}</span>
-            </div>
-          )}
+          <button className={mode === "promptql" ? "" : "ghost"} onClick={() => setMode("promptql")}>
+            Through PromptQL
+          </button>
         </div>
-        {data?.errors.map((e) => (
-          <p key={e.candidateId} className="missing">
-            {e.candidateId}: {e.error}
+
+        {mode === "app" ? (
+          <div style={{ marginTop: 12 }}>
+            <p className="muted" style={{ fontSize: 13 }}>
+              Uses <code>TYPESAFE_API_KEY</code> if set, otherwise mock answers.
+            </p>
+            <button onClick={runInApp} disabled={loading}>
+              {loading ? "Checking…" : `Check ${sampleCandidates.length} resumes`}
+            </button>
+          </div>
+        ) : (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontSize: 13 }}>
+              <strong>1.</strong> Copy the prompt and paste it into your PromptQL bot. It runs the real Jev calls.
+            </p>
+            <button onClick={copyPrompt}>{copied ? "Copied ✓" : "Copy prompt"}</button>
+            <p style={{ fontSize: 13, marginTop: 12 }}>
+              <strong>2.</strong> Paste the bot&apos;s JSON reply here.
+            </p>
+            <textarea rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder='{"c1": {...}, "c2": {...}}' />
+            <button onClick={loadPasted} disabled={!pasted.trim()} style={{ marginTop: 8 }}>
+              Load results
+            </button>
+          </div>
+        )}
+
+        {run && (
+          <div className="stats muted" style={{ marginTop: 12 }}>
+            <span>Source: {run.source === "mock" ? "MOCK (fake answers)" : run.source === "promptql" ? "PromptQL → Jev" : "Jev live"}</span>
+            {run.results[0] && <span>{run.results[0].model}</span>}
+            {run.totalMs !== null && <span>{run.totalMs} ms total</span>}
+            <span>{tokens.toLocaleString()} input tokens ≈ ${((tokens / 1e6) * 0.042).toFixed(5)}</span>
+          </div>
+        )}
+        {run?.errors.map((e) => (
+          <p key={e} className="not_found" style={{ fontSize: 13 }}>
+            {e}
           </p>
         ))}
       </div>
 
-      {data && (
+      {run && (
         <div className="lanes">
-          {LANES.map(({ route, label }) => {
-            const items = data.results.filter((r) => r.route === route);
+          {LANES.map(({ lane, label, hint }) => {
+            const items = run.results
+              .filter((r) => r.lane === lane)
+              .sort((a, b) => b.coverage.score - a.coverage.score);
             return (
-              <div key={route} className={`panel lane ${route}`}>
+              <div key={lane} className={`panel lane ${lane}`}>
                 <h2>
                   {label} <span>{items.length}</span>
                 </h2>
+                <p className="muted" style={{ fontSize: 12, marginTop: -8 }}>
+                  {hint}
+                </p>
                 {items.map((r) => (
-                  <Card key={r.candidate.id} r={r} open={open === r.candidate.id} toggle={() => setOpen(open === r.candidate.id ? null : r.candidate.id)} />
+                  <Card
+                    key={r.candidate.id}
+                    r={r}
+                    open={open === r.candidate.id}
+                    toggle={() => setOpen(open === r.candidate.id ? null : r.candidate.id)}
+                  />
                 ))}
               </div>
             );
@@ -106,13 +157,18 @@ function Card({ r, open, toggle }: { r: ScreeningResult; open: boolean; toggle: 
     <div className="card" onClick={toggle}>
       <div className="row" style={{ justifyContent: "space-between" }}>
         <strong>{r.candidate.name}</strong>
-        <span className="pill">fit {r.fit.score.toFixed(1)}/{r.fit.max}</span>
+        <span className="pill">
+          coverage {r.coverage.score.toFixed(1)}/{r.coverage.max}
+        </span>
       </div>
-      <div className="bar" style={{ margin: "6px 0" }}>
-        <span style={{ width: `${r.decision.confidence * 100}%`, background: "var(--accent)" }} />
-      </div>
-      <div className="muted" style={{ fontSize: 12 }}>
-        {r.decision.choice} · confidence {Math.round(r.decision.confidence * 100)}% · {r.latencyMs} ms
+      <div className="row" style={{ gap: 3, margin: "6px 0" }}>
+        {r.requirements.map((q) => (
+          <span
+            key={q.requirement.id}
+            title={`${q.requirement.text}: ${Math.round(q.pEvidence * 100)}%`}
+            className={`dot ${q.band}`}
+          />
+        ))}
       </div>
       <ul style={{ fontSize: 13 }}>
         {r.reasons.map((x) => (
@@ -122,14 +178,17 @@ function Card({ r, open, toggle }: { r: ScreeningResult; open: boolean; toggle: 
       {open && (
         <div style={{ fontSize: 13, marginTop: 8 }}>
           {r.requirements.map((q) => (
-            <div key={q.requirement.id} className="row" style={{ justifyContent: "space-between" }}>
-              <span>
-                {q.requirement.mustHave ? "★ " : ""}
-                {q.requirement.text}
-              </span>
-              <span className={q.band}>
-                {q.band} ({Math.round(q.pMet * 100)}%)
-              </span>
+            <div key={q.requirement.id} style={{ marginBottom: 6 }}>
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <span>
+                  {q.requirement.mustHave ? "★ " : ""}
+                  {q.requirement.text}
+                </span>
+                <span className={q.band}>{Math.round(q.pEvidence * 100)}%</span>
+              </div>
+              <div className="bar">
+                <span style={{ width: `${q.pEvidence * 100}%`, background: `var(--${q.band})` }} />
+              </div>
             </div>
           ))}
           <pre style={{ whiteSpace: "pre-wrap", marginTop: 8 }} className="muted">

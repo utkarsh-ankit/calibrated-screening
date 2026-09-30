@@ -1,55 +1,88 @@
 # Calibrated Screening
 
-A hiring screen that knows when it doesn't know. Built on **Jev** (TypeSafe AI's System One model).
+**AI finds the evidence. People make the call.**
 
-Most AI screeners give a yes/no and hide how sure they are. This one asks Jev typed questions about each
-resume and uses the **calibrated probabilities** to route candidates:
+Most AI resume screeners give a yes/no verdict and hide how sure they are. This one doesn't make verdicts at all.
+It uses **Jev** (TypeSafe AI's decision model) to answer one narrow question per requirement:
 
-- **Advance:** meets every must-have and the model is confident
-- **Reject:** clear evidence a must-have is missing
-- **Human review:** the model is unsure, or the resume is ambiguous on a must-have
+> *Does this resume contain evidence for this requirement?* → a probability, e.g. **0.87**
 
-Every decision comes with a plain-language reason that can be shown to the recruiter *and* the candidate.
+Those probabilities sort candidates into three **review queues**. A human reviews every candidate.
+
+| Queue | Meaning | What the reviewer does |
+|---|---|---|
+| 🟢 **Strong evidence** | Every must-have is backed by the resume | Read these first |
+| 🟡 **Needs a closer look** | Jev is *unsure* about a must-have (probability 30–70%) | Check the specific line Jev couldn't judge |
+| 🔴 **Evidence gaps** | No evidence found for a must-have | Confirm the gap. The resume may just be badly written |
+
+Nobody is rejected automatically.
+
+## Why this design
+
+1. **Uncertainty is shown, not hidden.** A generative LLM gives a confident-sounding answer either way. Jev returns a
+   probability for each requirement, so "I'm not sure" becomes its own queue instead of a silent wrong answer.
+2. **Evidence, not verdicts.** Asking a model "should we hire this person?" is legally and ethically risky
+   (e.g. NYC's rules on automated hiring tools). Asking "is X stated in this text?" is a narrow, checkable question.
+3. **Fast and cheap.** One Jev call per resume answers every question in parallel, in about 100 ms, at $0.042 per million input tokens.
 
 ## How it works
 
-One Jev call per candidate, all questions answered in parallel against the same state:
+```mermaid
+flowchart LR
+  A[Job requirements<br/>+ must-have flags] --> C
+  B[Resume text] --> C
+  C[Jev: one call per resume<br/>P evidence for each requirement<br/>+ coverage score] --> D{Must-haves}
+  D -->|any unsure 30–70%| E[🟡 Needs a closer look]
+  D -->|any not found under 30%| F[🔴 Evidence gaps]
+  D -->|all found over 70%| G[🟢 Strong evidence]
+  E & F & G --> H[👤 Human decides]
+```
 
-| Question | Jev type | Used for |
+What Jev is asked, per resume:
+
+| Question | Jev type | Returns |
 |---|---|---|
-| `req_<id>` per requirement | `noul` | P(requirement met) → met / unclear / missing |
-| `fit` | `score` (0–4) | overall match |
-| `decision` | `choice` (advance / reject) | recommendation + confidence |
+| `req_<id>`: "Does `resume` contain evidence for *\<requirement\>*?" | `noul` (yes/no) | P(yes), 0–1 |
+| `coverage`: "How many requirements are evidenced?" | `score` (0–4) | score + confidence |
 
-Routing lives in `lib/screening.ts` (`POLICY` thresholds + `routeCandidate`).
+The rules live in one small function: `assignLane` in [`lib/screening.ts`](lib/screening.ts). The thresholds are in `POLICY`.
 
-## Run
+## Three ways to run Jev
+
+| Mode | When | How |
+|---|---|---|
+| **Mock** | Building the UI, no access yet | Default. Fake answers from keyword matching. **Not real.** |
+| **Live** | You have a TypeSafe key | Put `TYPESAFE_API_KEY` in `.env.local` |
+| **Through PromptQL** | No key of your own, but PromptQL's bot can call Jev | Click **Through PromptQL** in the app → **Copy prompt** → paste into the bot → paste its JSON reply back → **Load results** |
+
+The PromptQL bot calls Jev with its own credentials and sends back the raw responses. The app interprets them exactly
+like live results. A ready-made prompt for the sample data is in [`promptql/sample-prompt.md`](promptql/sample-prompt.md).
+
+## Run it
 
 ```bash
 npm install
-cp .env.example .env.local   # add TYPESAFE_API_KEY; leave blank for mock mode
-npm run dev
+cp .env.example .env.local   # optional: add TYPESAFE_API_KEY
+npm run dev                  # http://localhost:3000
 ```
 
-Without a key the app runs in **mock mode** (deterministic fake answers) so the UI can be built first.
-
-## Layout
+## Code map
 
 ```
-app/page.tsx            UI: job + requirements editor, three routing lanes
-app/api/screen/route.ts POST {job, candidates} → screened results
-lib/jev.ts              Jev HTTP client + mock
-lib/screening.ts        question schema + routing policy
-lib/types.ts            Jev + app types
-data/sample.ts          fictional JD and 8 fictional resumes
+app/page.tsx             UI: requirements editor, run buttons, three review queues
+app/api/screen/route.ts  Server route for live/mock runs (keeps the API key server-side)
+lib/screening.ts         ★ The logic: questions sent to Jev + how answers become queues
+lib/promptql.ts          Builds the PromptQL prompt; parses the bot's reply
+lib/jev.ts               Jev HTTP client + mock
+lib/screen-server.ts     Server-side glue: call Jev → interpret
+data/sample.ts           Fictional job + 8 fictional resumes (clear, weak and ambiguous on purpose)
 ```
 
-## Roadmap (hackathon day)
+## Roadmap
 
-- [ ] Swap mock → real Jev key, sanity-check probabilities on the 8 samples
-- [ ] Tune `POLICY` thresholds so each lane gets sensible candidates
+- [ ] Run the 8 samples through PromptQL and tune `POLICY` thresholds on real probabilities
 - [ ] Paste/upload your own resumes (PDF → text)
-- [ ] Extract requirements from a JD with an LLM (Jev can't generate text)
-- [ ] Candidate view: "what you were missing" with confidence
-- [ ] Eval tab: same questions on a chat LLM vs Jev — latency, cost, agreement on a hand-labeled set
-- [ ] Deploy to Vercel + record a 2-min demo
+- [ ] Draft requirements from a job description with an LLM (Jev decides, an LLM writes)
+- [ ] Show the resume line behind each "evidenced" requirement
+- [ ] Eval tab: Jev vs a chat LLM on a hand-labeled set: agreement, latency, cost
+- [ ] Deploy to Vercel + 2-minute demo video

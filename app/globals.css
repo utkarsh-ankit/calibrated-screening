@@ -4,9 +4,9 @@
   --text: #1a1a1a;
   --muted: #6b6b6b;
   --border: #e3e3df;
-  --advance: #1f7a4d;
-  --review: #b26b00;
-  --reject: #b3261e;
+  --evidenced: #1f7a4d;
+  --unclear: #b26b00;
+  --not_found: #b3261e;
   --accent: #2f4bd8;
 }
 @media (prefers-color-scheme: dark) {
@@ -16,9 +16,9 @@
     --text: #ececec;
     --muted: #9a9a9a;
     --border: #2e2e2e;
-    --advance: #4cc38a;
-    --review: #f0a830;
-    --reject: #ff6b61;
+    --evidenced: #4cc38a;
+    --unclear: #f0a830;
+    --not_found: #ff6b61;
     --accent: #8ea2ff;
   }
 }
@@ -50,16 +50,21 @@ textarea, input[type="text"] {
 .lanes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
 @media (max-width: 800px) { .lanes { grid-template-columns: 1fr; } }
 .lane h2 { display: flex; justify-content: space-between; }
-.lane.advance h2 { color: var(--advance); }
-.lane.human_review h2 { color: var(--review); }
-.lane.reject h2 { color: var(--reject); }
+.lane.strong h2 { color: var(--evidenced); }
+.lane.closer_look h2 { color: var(--unclear); }
+.lane.gaps h2 { color: var(--not_found); }
 .card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; cursor: pointer; }
 .card:hover { border-color: var(--accent); }
 .bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
 .bar > span { display: block; height: 100%; }
 .pill { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); }
-.met { color: var(--advance); }
-.unclear { color: var(--review); }
-.missing { color: var(--reject); }
+.evidenced { color: var(--evidenced); }
+.unclear { color: var(--unclear); }
+.not_found { color: var(--not_found); }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot.evidenced { background: var(--evidenced); }
+.dot.unclear { background: var(--unclear); }
+.dot.not_found { background: var(--not_found); }
+code { font-size: 12px; }
 .stats { display: flex; gap: 20px; font-size: 13px; }
 ul { margin: 6px 0; padding-left: 18px; }

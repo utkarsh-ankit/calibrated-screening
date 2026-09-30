@@ -1,115 +1,119 @@
-import { systemOne } from "./jev";
+// Pure logic: no network, no env vars. Used by the server (live/mock) AND the browser (PromptQL import).
 import type {
   Candidate,
-  ChoiceAnswer,
   Job,
   JevQuestion,
+  JevResponse,
+  Lane,
   NoulAnswer,
   RequirementResult,
-  Route,
   ScoreAnswer,
   ScreeningResult,
 } from "./types";
 
-/** Thresholds for routing. Tune these on the day against labeled resumes. */
-export const POLICY = {
-  metAbove: 0.7, // P(met) >= this => "met"
-  missingBelow: 0.3, // P(met) <= this => "missing"; in between => "unclear"
-  minDecisionConfidence: 0.6, // below this, a human looks at it
-};
+/**
+ * Thresholds on Jev's P(evidence). Tune these on the day against the sample resumes.
+ *   >= evidencedAbove  -> "evidenced"
+ *   <= notFoundBelow   -> "not_found"
+ *   in between         -> "unclear"  (the model isn't sure: a human should look)
+ */
+export const POLICY = { evidencedAbove: 0.7, notFoundBelow: 0.3 };
 
-const FIT_LEVELS = [
-  "No meaningful overlap with the role",
-  "Some adjacent experience, major gaps",
-  "Meets about half of the core requirements",
-  "Meets most requirements; minor gaps",
-  "Strong match on essentially every requirement",
+const COVERAGE_LEVELS = [
+  "The resume shows evidence for none of the listed requirements",
+  "Evidence for a few requirements",
+  "Evidence for about half of the requirements",
+  "Evidence for most requirements",
+  "Evidence for essentially every requirement",
 ];
 
-/** Build the question map for one candidate. One Jev call answers all of it in parallel. */
+/**
+ * Questions Jev answers for ONE candidate, all in one call.
+ * Every question asks about evidence in the text, never "should we hire".
+ */
 export function buildQuestions(job: Job): Record<string, JevQuestion> {
   const q: Record<string, JevQuestion> = {};
   for (const r of job.requirements) {
     q[`req_${r.id}`] = {
       type: "noul",
-      instructions: `Does \`resume\` show concrete evidence that the candidate meets this requirement: "${r.text}"? Only count evidence stated in the resume, not assumptions.`,
+      instructions: `Does \`resume\` contain concrete evidence for this requirement: "${r.text}"? Only count what is stated in the resume.`,
     };
   }
-  q.fit = {
+  q.coverage = {
     type: "score",
-    instructions: "How well does `resume` match `job_description` overall?",
-    criteria: FIT_LEVELS,
-  };
-  q.decision = {
-    type: "choice",
-    instructions: "Should the candidate in `resume` advance to a first interview for `job_title`?",
-    criteria: {
-      advance: "Clearly qualified; worth an interview",
-      reject: "Clearly missing core requirements",
-    },
+    instructions: "How many of the requirements in `requirements` are evidenced in `resume`?",
+    criteria: COVERAGE_LEVELS,
   };
   return q;
 }
 
-export async function screenCandidate(job: Job, candidate: Candidate): Promise<ScreeningResult> {
-  const t0 = Date.now();
-  const res = await systemOne(
-    { job_title: job.title, job_description: job.description, resume: candidate.resume },
-    buildQuestions(job),
-  );
-  const latencyMs = Date.now() - t0;
+/** The `state` Jev sees for one candidate. */
+export function buildState(job: Job, candidate: Candidate) {
+  return {
+    job_title: job.title,
+    requirements: job.requirements.map((r) => r.text).join("\n"),
+    resume: candidate.resume,
+  };
+}
 
+/** Turn a raw Jev response into a review-queue entry. */
+export function interpret(
+  job: Job,
+  candidate: Candidate,
+  res: JevResponse,
+  latencyMs: number | null,
+): ScreeningResult {
   const requirements: RequirementResult[] = job.requirements.map((r) => {
-    const pMet = (res.answers[`req_${r.id}`] as NoulAnswer).noul;
-    const band = pMet >= POLICY.metAbove ? "met" : pMet <= POLICY.missingBelow ? "missing" : "unclear";
-    return { requirement: r, pMet, band };
+    const a = res.answers[`req_${r.id}`] as NoulAnswer | undefined;
+    if (!a) throw new Error(`Missing answer "req_${r.id}" for ${candidate.name}`);
+    const p = a.noul;
+    const band = p >= POLICY.evidencedAbove ? "evidenced" : p <= POLICY.notFoundBelow ? "not_found" : "unclear";
+    return { requirement: r, pEvidence: p, band };
   });
 
-  const fitA = res.answers.fit as ScoreAnswer;
-  const decA = res.answers.decision as ChoiceAnswer;
-
-  const { route, reasons } = routeCandidate(requirements, decA);
+  const cov = res.answers.coverage as ScoreAnswer | undefined;
+  const { lane, reasons } = assignLane(requirements);
 
   return {
     candidate,
     requirements,
-    fit: { score: fitA.score, max: FIT_LEVELS.length - 1, confidence: fitA.confidence, probabilities: fitA.probabilities },
-    decision: { choice: decA.choice, confidence: decA.confidence, probabilities: decA.probabilities },
-    route,
+    coverage: {
+      score: cov?.score ?? 0,
+      max: COVERAGE_LEVELS.length - 1,
+      confidence: cov?.confidence ?? 0,
+    },
+    lane,
     reasons,
     latencyMs,
-    inputTokens: res.usage.input_tokens,
+    inputTokens: res.usage?.input_tokens ?? 0,
     model: res.model,
   };
 }
 
 /**
- * The point of view: the model decides the clear cases, a human decides the uncertain ones.
- * Every routing reason is human-readable so it can be shown to the recruiter and the candidate.
+ * Where should a reviewer look first?
+ *   1. Any must-have the model is UNSURE about  -> closer_look  (uncertainty is surfaced, not hidden)
+ *   2. Any must-have with NO evidence found     -> gaps         (a human confirms; nobody is auto-rejected)
+ *   3. Every must-have evidenced                -> strong
  */
-export function routeCandidate(reqs: RequirementResult[], dec: ChoiceAnswer): { route: Route; reasons: string[] } {
-  const reasons: string[] = [];
-  const unclearMust = reqs.filter((r) => r.requirement.mustHave && r.band === "unclear");
-  const missingMust = reqs.filter((r) => r.requirement.mustHave && r.band === "missing");
+export function assignLane(reqs: RequirementResult[]): { lane: Lane; reasons: string[] } {
+  const must = reqs.filter((r) => r.requirement.mustHave);
+  const unclear = must.filter((r) => r.band === "unclear");
+  const notFound = must.filter((r) => r.band === "not_found");
 
-  if (dec.confidence < POLICY.minDecisionConfidence) {
-    reasons.push(`Model is unsure (confidence ${pct(dec.confidence)}).`);
-  }
-  for (const r of unclearMust) {
-    reasons.push(`Resume is ambiguous on must-have: "${r.requirement.text}" (${pct(r.pMet)}).`);
-  }
-  if (reasons.length) return { route: "human_review", reasons };
-
-  if (missingMust.length) {
+  if (unclear.length) {
     return {
-      route: "reject",
-      reasons: missingMust.map((r) => `No evidence for must-have: "${r.requirement.text}".`),
+      lane: "closer_look",
+      reasons: unclear.map((r) => `Unclear evidence for must-have "${r.requirement.text}" (${pct(r.pEvidence)}).`),
     };
   }
-  if (dec.choice === "advance") {
-    return { route: "advance", reasons: [`Meets all must-haves; model confident (${pct(dec.confidence)}).`] };
+  if (notFound.length) {
+    return {
+      lane: "gaps",
+      reasons: notFound.map((r) => `No evidence found for must-have "${r.requirement.text}" (${pct(r.pEvidence)}).`),
+    };
   }
-  return { route: "reject", reasons: [`Model recommends reject with ${pct(dec.confidence)} confidence.`] };
+  return { lane: "strong", reasons: [`Evidence found for all ${must.length} must-haves.`] };
 }
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;

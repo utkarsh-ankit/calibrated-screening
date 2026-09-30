@@ -38,27 +38,28 @@ function hash(s: string) {
 }
 
 function overlap(question: string, text: string) {
+  question = question.match(/"([^"]+)"/)?.[1] ?? question; // score only the quoted requirement
   const words = question
     .toLowerCase()
     .match(/[a-z0-9+#.]{3,}/g)
     ?.filter((w) => !["does", "the", "and", "with", "candidate", "resume", "have", "for"].includes(w)) ?? [];
   if (!words.length) return 0.5;
   const t = text.toLowerCase();
-  return words.filter((w) => t.includes(w)).length / words.length;
+  return words.filter((w) => t.includes(w.slice(0, 4))).length / words.length; // crude stem match
 }
 
 async function mockSystemOne(
   state: Record<string, unknown>,
   questions: Record<string, JevQuestion>,
 ): Promise<JevResponse> {
-  const text = JSON.stringify(state);
+  const text = typeof state.resume === "string" ? state.resume : JSON.stringify(state);
   const answers: Record<string, JevAnswer> = {};
   let avg = 0;
   const entries = Object.entries(questions);
 
   for (const [key, q] of entries) {
     if (q.type === "noul") {
-      const p = Math.min(0.98, Math.max(0.02, overlap(q.instructions, text) * 0.9 + hash(key + text) * 0.2));
+      const p = Math.min(0.97, Math.max(0.03, overlap(q.instructions, text) * 1.8 - 0.1 + hash(key + text) * 0.1));
       answers[key] = { type: "noul", noul: +p.toFixed(2) };
       avg += p;
     }
