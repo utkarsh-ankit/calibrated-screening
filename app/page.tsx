@@ -39,11 +39,7 @@ export default function Home() {
     setLoading(true);
     setRun(null);
     setStatus("Sending resumes to PromptQL…");
-    const res = await fetch("/api/promptql-trigger", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job, candidates: sampleCandidates }),
-    });
+    const res = await fetch("/api/promptql-trigger", { method: "POST" });
     const data = await res.json();
     if (!res.ok) {
       setStatus(`❌ ${data.error}`);
@@ -143,8 +139,8 @@ export default function Home() {
         ) : (
           <div style={{ marginTop: 12 }}>
             <p style={{ fontSize: 13 }}>
-              <strong>Automatic:</strong> sends the resumes to your PromptQL bot, which runs Jev and saves results to
-              GitHub. This page waits and loads them.
+              <strong>Automatic:</strong> tells your PromptQL bot to run Jev on the resumes in the repo
+              (<code>promptql/requests.json</code>) and save results to GitHub. This page waits and loads them.
             </p>
             <button onClick={runAutomatic} disabled={loading}>
               {loading ? "Running…" : "Run with PromptQL"}
