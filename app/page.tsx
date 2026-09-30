@@ -159,7 +159,13 @@ export default function Home() {
           <button className={mode === "compare" ? "" : "ghost"} onClick={() => setMode("compare")}>
             Compare all 3
           </button>
-          <button className={mode === "app" ? "" : "ghost"} onClick={() => setMode("app")}>
+          <button
+            className={mode === "app" ? "" : "ghost"}
+            onClick={() => {
+              setMode("app");
+              runInApp();
+            }}
+          >
             Keyword baseline (old-school ATS)
           </button>
           <button
@@ -171,7 +177,13 @@ export default function Home() {
           >
             Open-source LLM
           </button>
-          <button className={mode === "promptql" ? "" : "ghost"} onClick={() => setMode("promptql")}>
+          <button
+            className={mode === "promptql" ? "" : "ghost"}
+            onClick={() => {
+              setMode("promptql");
+              loadFromGitHub();
+            }}
+          >
             Through PromptQL
           </button>
         </div>

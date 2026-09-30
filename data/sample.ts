@@ -11,7 +11,7 @@ and own evaluation loops that tell us when agents are right or wrong.
 Stack: Python and TypeScript, Postgres, serverless deploys. You'll ship end to end and talk to users.`,
   requirements: [
     { id: "llm_agents", text: "Has built LLM-based agents or multi-step LLM workflows", mustHave: true },
-    { id: "python_ts", text: "Production experience in Python or TypeScript", mustHave: true },
+    { id: "python_ts", text: "Production experience in Python or TypeScript", mustHave: false },
     { id: "rag", text: "Has built retrieval / RAG or search systems", mustHave: false },
     { id: "evals", text: "Has designed evaluations or metrics for ML/LLM systems", mustHave: true },
     { id: "shipped", text: "Has shipped a product used by real users", mustHave: false },
